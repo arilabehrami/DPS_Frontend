@@ -23,7 +23,9 @@ function readStoredUser() {
 }
 
 function normalizeRole(user) {
-  const role = user?.role?.toLowerCase?.() || ROLES.GUEST
+  const rawRole = user?.role?.name || user?.role || user?.role_name
+  const role = rawRole?.toLowerCase?.() || ROLES.GUEST
+  if (role === 'user') return ROLES.EMPLOYEE
   if (Object.values(ROLES).includes(role)) return role
   return ROLES.GUEST
 }

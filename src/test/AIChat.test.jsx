@@ -12,7 +12,14 @@ vi.mock('../api/aiApi', () => ({
   },
 }))
 
+vi.mock('../api/employeesApi', () => ({
+  employeesApi: {
+    getAll: vi.fn(),
+  },
+}))
+
 import { aiApi } from '../api/aiApi'
+import { employeesApi } from '../api/employeesApi'
 
 describe('AIChat', () => {
   beforeEach(() => {
@@ -20,6 +27,9 @@ describe('AIChat', () => {
     localStorage.clear()
     aiApi.chat.mockResolvedValue({
       data: { response: 'Hello from assistant' },
+    })
+    employeesApi.getAll.mockResolvedValue({
+      data: [{ id: 7, name: 'Demo persona' }],
     })
   })
 
@@ -55,7 +65,7 @@ describe('AIChat', () => {
     await waitFor(() => {
       expect(aiApi.chat).toHaveBeenCalledWith(
         'Hello',
-        expect.objectContaining({ personaId: 1, conversationId: 1 })
+        expect.objectContaining({ personaId: 7, conversationId: 1 })
       )
     })
 

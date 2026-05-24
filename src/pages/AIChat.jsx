@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { aiApi } from '../api/aiApi'
+import { employeesApi } from '../api/employeesApi'
 import { getErrorMessage } from '../api/axios'
 import {
   CHAT_UPDATED_EVENT,
@@ -12,6 +13,11 @@ import {
 } from '../services/chatService'
 import { getSettings } from '../services/settingsService'
 import { PERSONALITY_NAME } from '../utils/constants'
+
+function getList(data) {
+  const list = data?.items || data?.results || data?.personas || data?.data || data
+  return Array.isArray(list) ? list : []
+}
 
 function TypingIndicator() {
   return (
@@ -90,16 +96,21 @@ export function AIChat() {
     setLoading(true)
 
     try {
-      const history = settings.memoryEnabled
-        ? messages.map((m) => ({
-            role: m.role,
-            content: m.content,
-          }))
-        : []
+      const personasResponse = await employeesApi.getAll()
+      const persona = getList(personasResponse.data)[0]
 
-      const { data } = await aiApi.chat(userMsg.content, history)
+      if (!persona?.id) {
+        throw new Error('No persona found. Create at least one persona in backend first.')
+      }
+
+      const { data } = await aiApi.chat(userMsg.content, {
+        personaId: persona.id,
+        conversationId: 1,
+        model: settings.model,
+      })
 
       const reply =
+        data.response_text ||
         data.response ||
         data.message ||
         data.content ||
@@ -137,7 +148,7 @@ export function AIChat() {
       <header className="chat-header">
         <div>
           <h1 className="page-title">Chat with {PERSONALITY_NAME}</h1>
-          <p className="page-subtitle">POST /openai/chat</p>
+          <p className="page-subtitle">POST /chat/generate</p>
         </div>
 
         <div className="flex gap-2">
