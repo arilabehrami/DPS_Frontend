@@ -53,7 +53,10 @@ describe('AIChat', () => {
     await user.click(screen.getByRole('button', { name: /send/i }))
 
     await waitFor(() => {
-      expect(aiApi.chat).toHaveBeenCalledWith('Hello', [])
+      expect(aiApi.chat).toHaveBeenCalledWith(
+        'Hello',
+        expect.objectContaining({ personaId: 1, conversationId: 1 })
+      )
     })
 
     expect(await screen.findByText('Hello from assistant')).toBeInTheDocument()

@@ -82,12 +82,13 @@ export function AIChat() {
     setLoading(true)
 
     try {
-      const history = settings.memoryEnabled
-        ? messages.map((m) => ({ role: m.role, content: m.content }))
-        : []
-      const { data } = await aiApi.chat(userMsg.content, history)
+      const { data } = await aiApi.chat(userMsg.content, {
+        personaId: 1,
+        conversationId: 1,
+        model: settings.model,
+      })
       const reply =
-        data.response || data.message || data.content || 'No response'
+        data.response_text || data.response || data.message || data.content || 'No response'
       persist([...next, { role: 'assistant', content: reply, ts: Date.now() }])
     } catch (err) {
       setError(getErrorMessage(err, 'Failed to get AI response'))
@@ -113,7 +114,7 @@ export function AIChat() {
       <header className="chat-header">
         <div>
           <h1 className="page-title">Chat with {PERSONALITY_NAME}</h1>
-          <p className="page-subtitle">POST /api/ai/chat</p>
+          <p className="page-subtitle">POST /chat/generate</p>
         </div>
         <div className="flex gap-2">
           <button
