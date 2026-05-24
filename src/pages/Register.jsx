@@ -23,7 +23,30 @@ export function Register() {
       </section>
     )
   }
+
   if (isAuthenticated) return <Navigate to="/dashboard" replace />
+
+  const formatErrorMessage = (errorValue) => {
+    if (!errorValue) {
+      return 'Registration failed'
+    }
+
+    if (typeof errorValue === 'string') {
+      return errorValue
+    }
+
+    if (Array.isArray(errorValue)) {
+      return errorValue
+        .map((item) => item.msg || item.message || JSON.stringify(item))
+        .join(', ')
+    }
+
+    if (typeof errorValue === 'object') {
+      return errorValue.message || errorValue.detail || JSON.stringify(errorValue)
+    }
+
+    return 'Registration failed'
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -34,22 +57,30 @@ export function Register() {
       setError(t('auth.allFieldsRequired'))
       return
     }
+
     if (password !== confirmPassword) {
       setError(t('auth.passwordsMismatch'))
       return
     }
+
     if (password.length < 6) {
       setError(t('auth.passwordMinLength'))
       return
     }
 
     const result = await register({
-      name: name.trim(),
+      workspace_id: 1,
+      role_id: 2,
+      username: name.trim(),
       email: email.trim(),
       password,
     })
-    if (result.success) navigate('/dashboard', { replace: true })
-    else setError(result.error)
+
+    if (result.success) {
+      navigate('/dashboard', { replace: true })
+    } else {
+      setError(formatErrorMessage(result.error))
+    }
   }
 
   return (
