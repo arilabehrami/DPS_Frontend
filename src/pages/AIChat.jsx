@@ -54,6 +54,7 @@ export function AIChat() {
 
     window.addEventListener(CHAT_UPDATED_EVENT, onUpdate)
     window.addEventListener(NEW_CHAT_EVENT, onNewChat)
+
     return () => {
       window.removeEventListener(CHAT_UPDATED_EVENT, onUpdate)
       window.removeEventListener(NEW_CHAT_EVENT, onNewChat)
@@ -72,10 +73,17 @@ export function AIChat() {
 
   const handleSend = async (e) => {
     e.preventDefault()
+
     if (!input.trim() || loading) return
 
-    const userMsg = { role: 'user', content: input.trim(), ts: Date.now() }
+    const userMsg = {
+      role: 'user',
+      content: input.trim(),
+      ts: Date.now(),
+    }
+
     const next = [...messages, userMsg]
+
     persist(next)
     setInput('')
     setError('')
@@ -83,12 +91,28 @@ export function AIChat() {
 
     try {
       const history = settings.memoryEnabled
-        ? messages.map((m) => ({ role: m.role, content: m.content }))
+        ? messages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          }))
         : []
+
       const { data } = await aiApi.chat(userMsg.content, history)
+
       const reply =
-        data.response || data.message || data.content || 'No response'
-      persist([...next, { role: 'assistant', content: reply, ts: Date.now() }])
+        data.response ||
+        data.message ||
+        data.content ||
+        'No response'
+
+      persist([
+        ...next,
+        {
+          role: 'assistant',
+          content: reply,
+          ts: Date.now(),
+        },
+      ])
     } catch (err) {
       setError(getErrorMessage(err, 'Failed to get AI response'))
     } finally {
@@ -113,8 +137,9 @@ export function AIChat() {
       <header className="chat-header">
         <div>
           <h1 className="page-title">Chat with {PERSONALITY_NAME}</h1>
-          <p className="page-subtitle">POST /api/ai/chat</p>
+          <p className="page-subtitle">POST /openai/chat</p>
         </div>
+
         <div className="flex gap-2">
           <button
             type="button"
@@ -123,6 +148,7 @@ export function AIChat() {
           >
             {historyOpen ? 'Hide' : 'Show'} history
           </button>
+
           <button
             type="button"
             onClick={handleClear}
@@ -138,6 +164,7 @@ export function AIChat() {
         {historyOpen && (
           <aside className="chat-history-panel hidden md:flex">
             <h2 className="chat-history-title">History</h2>
+
             <ul className="chat-history-list">
               {sessions.map((s) => (
                 <li key={s.id}>
@@ -151,8 +178,11 @@ export function AIChat() {
                   </button>
                 </li>
               ))}
+
               {!sessions.length && (
-                <li className="px-3 py-2 text-xs text-slate-400">No history yet</li>
+                <li className="px-3 py-2 text-xs text-slate-400">
+                  No history yet
+                </li>
               )}
             </ul>
           </aside>
@@ -163,35 +193,48 @@ export function AIChat() {
             {!messages.length && (
               <div className="chat-empty">
                 <span className="text-4xl">🧠</span>
+
                 <p className="mt-4 text-lg font-medium">
                   Start a conversation with {PERSONALITY_NAME}
                 </p>
+
                 <p className="mt-1 max-w-sm text-sm text-slate-500">
                   Ask anything — your digital personality remembers context when memory is enabled.
                 </p>
               </div>
             )}
+
             {messages.map((msg, i) => (
               <article
                 key={i}
-                className={`chat-bubble-row ${msg.role === 'user' ? 'chat-bubble-row--user' : ''}`}
+                className={`chat-bubble-row ${
+                  msg.role === 'user' ? 'chat-bubble-row--user' : ''
+                }`}
               >
                 {msg.role === 'assistant' && (
                   <span className="chat-avatar">🧠</span>
                 )}
+
                 <div
-                  className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble--user' : 'chat-bubble--assistant'}`}
+                  className={`chat-bubble ${
+                    msg.role === 'user'
+                      ? 'chat-bubble--user'
+                      : 'chat-bubble--assistant'
+                  }`}
                 >
                   {msg.content}
                 </div>
               </article>
             ))}
+
             {loading && <TypingIndicator />}
+
             {error && (
               <p className="alert alert--error" role="alert">
                 {error}
               </p>
             )}
+
             <span ref={endRef} />
           </section>
 
@@ -204,6 +247,7 @@ export function AIChat() {
               disabled={loading}
               className="chat-input"
             />
+
             <button
               type="submit"
               disabled={loading || !input.trim()}

@@ -1,13 +1,13 @@
 import { http } from './http'
 
 export const employeesApi = {
-  getAll: (params) => http.get('/api/employees', { params }),
+  getAll: (params) => http.get('/personas/', { params }),
 
-  getById: (id) => http.get(`/api/employees/${id}`),
+  getById: (id) => http.get(`/personas/${id}`),
 
-  create: (data) => http.post('/api/employees', data),
+  create: (data) => http.post('/personas/', data),
 
-  update: (id, data) => http.put(`/api/employees/${id}`, data),
+  update: (id, data) => http.put(`/personas/${id}`, data),
 
-  delete: (id) => http.delete(`/api/employees/${id}`),
+  delete: (id) => http.delete(`/personas/${id}`),
 }
