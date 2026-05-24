@@ -18,6 +18,7 @@ export function Employees() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+
   const debouncedSearch = useDebounce(search)
   const navigate = useNavigate()
   const { canEdit, isGuest } = useAuth()
@@ -31,25 +32,49 @@ export function Employees() {
     { key: 'id', label: 'Persona ID' },
   ]
 
+  const normalizePersonas = (data) => {
+    if (Array.isArray(data)) {
+      return data
+    }
+
+    if (Array.isArray(data?.items)) {
+      return data.items
+    }
+
+    if (Array.isArray(data?.results)) {
+      return data.results
+    }
+
+    if (Array.isArray(data?.data)) {
+      return data.data
+    }
+
+    return []
+  }
+
   const fetchEmployees = useCallback(async () => {
     setLoading(true)
     setError('')
+
     try {
       const { data } = await employeesApi.getAll({
         search: debouncedSearch || undefined,
         page,
         page_size: PAGE_SIZE,
       })
-      const list = data.items || data.results || data
-      setEmployees(Array.isArray(list) ? list : [])
-      setTotal(data.total || data.count || list?.length || 0)
+
+      const list = normalizePersonas(data)
+
+      setEmployees(list)
+      setTotal(data?.total || data?.count || list.length || 0)
     } catch (err) {
-      setError(getErrorMessage(err, t('employees.loadError')))
+      setError(getErrorMessage(err, 'Failed to load personas'))
       setEmployees([])
+      setTotal(0)
     } finally {
       setLoading(false)
     }
-  }, [debouncedSearch, page, t])
+  }, [debouncedSearch, page])
 
   useEffect(() => {
     fetchEmployees()
@@ -67,12 +92,18 @@ export function Employees() {
         <div>
           <h1 className="page-title">{t('employees.title')}</h1>
           <p className="page-subtitle">
-            {t('employees.subtitle')}
+            GET /personas/
             {isGuest && ` · ${t('common.readOnly')}`}
           </p>
         </div>
+
         {canEdit && (
-          <button type="button" className="btn-primary" disabled title={t('employees.backendRequired')}>
+          <button
+            type="button"
+            className="btn-primary"
+            disabled
+            title={t('employees.backendRequired')}
+          >
             {t('employees.addPersona')}
           </button>
         )}
@@ -100,7 +131,12 @@ export function Employees() {
             onRowClick={(row) => navigate(`/employees/${row.id}`)}
             emptyMessage={t('employees.empty')}
           />
-          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
         </>
       )}
     </section>
