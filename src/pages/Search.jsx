@@ -37,10 +37,10 @@ export function Search() {
 
   const columns = [
     { key: 'name', label: t('employees.persona') },
-    { key: 'department', label: t('employees.style') },
-    { key: 'role', label: t('common.role') },
-    { key: 'status', label: t('employees.status') },
-    { key: 'hire_date', label: t('employees.created') },
+    { key: 'description', label: 'Description' },
+    { key: 'workspace_id', label: 'Workspace ID' },
+    { key: 'user_id', label: 'User ID' },
+    { key: 'id', label: 'Persona ID' },
   ]
 
   const handleFilterChange = (name, value) => {
@@ -143,7 +143,7 @@ export function Search() {
       <header>
         <h1 className="page-title">{t('search.title')}</h1>
         <p className="page-subtitle">
-          {t('search.subtitle', { name: PERSONALITY_NAME })} · GET /api/employees?
+          {t('search.subtitle', { name: PERSONALITY_NAME })} · GET /personas/?
           {queryPreview || '...'}
         </p>
       </header>

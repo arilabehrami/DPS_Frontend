@@ -23,7 +23,7 @@ export const LANGUAGES = [
   { id: 'de', label: 'German' },
 ]
 
-/** Filter options for GET /api/employees (persona registry) */
+/** Filter options for GET /personas/ (persona registry) */
 export const DEPARTMENTS = [
   'Conversational',
   'Professional',

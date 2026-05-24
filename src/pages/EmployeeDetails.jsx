@@ -56,17 +56,10 @@ export function EmployeeDetails() {
       </header>
 
       <article className="card p-6 space-y-4">
-        <DetailRow label="Contact" value={persona.email} />
-        <DetailRow label="Style" value={persona.department} />
-        <DetailRow label="Role" value={persona.role} />
-        <DetailRow label="Status" value={persona.status} />
-        {persona.hire_date && (
-          <DetailRow label="Created" value={persona.hire_date} />
-        )}
-        {persona.phone && <DetailRow label="Phone" value={persona.phone} />}
-        {persona.personalityType && (
-          <DetailRow label="Personality type" value={persona.personalityType} />
-        )}
+        <DetailRow label="Description" value={persona.description} />
+        <DetailRow label="Workspace ID" value={persona.workspace_id} />
+        <DetailRow label="User ID" value={persona.user_id} />
+        <DetailRow label="Persona ID" value={persona.id} />
       </article>
 
       {canEdit && !isGuest && (

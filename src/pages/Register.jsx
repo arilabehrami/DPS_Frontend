@@ -44,9 +44,11 @@ export function Register() {
     }
 
     const result = await register({
-      name: name.trim(),
+      username: name.trim(),
       email: email.trim(),
       password,
+      workspace_id: 1,
+      role_id: 1,
     })
     if (result.success) navigate('/dashboard', { replace: true })
     else setError(result.error)
