@@ -25,18 +25,10 @@ export function Employees() {
 
   const columns = [
     { key: 'name', label: t('employees.persona') },
-    { key: 'email', label: t('employees.contact') },
-    { key: 'department', label: t('employees.style') },
-    { key: 'role', label: t('common.role') },
-    {
-      key: 'status',
-      label: t('employees.status'),
-      render: (row) => (
-        <span className={`status-badge status-badge--${row.status}`}>
-          {row.status}
-        </span>
-      ),
-    },
+    { key: 'description', label: 'Description' },
+    { key: 'workspace_id', label: 'Workspace ID' },
+    { key: 'user_id', label: 'User ID' },
+    { key: 'id', label: 'Persona ID' },
   ]
 
   const fetchEmployees = useCallback(async () => {
