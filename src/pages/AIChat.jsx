@@ -90,17 +90,14 @@ export function AIChat() {
     setLoading(true)
 
     try {
-<<<<<<< HEAD
-      const history = settings.memoryEnabled
-        ? messages.map((m) => ({
-            role: m.role,
-            content: m.content,
-          }))
-        : []
-
-      const { data } = await aiApi.chat(userMsg.content, history)
+      const { data } = await aiApi.chat(userMsg.content, {
+        personaId: 1,
+        conversationId: 1,
+        model: settings.model,
+      })
 
       const reply =
+        data.response_text ||
         data.response ||
         data.message ||
         data.content ||
@@ -114,16 +111,6 @@ export function AIChat() {
           ts: Date.now(),
         },
       ])
-=======
-      const { data } = await aiApi.chat(userMsg.content, {
-        personaId: 1,
-        conversationId: 1,
-        model: settings.model,
-      })
-      const reply =
-        data.response_text || data.response || data.message || data.content || 'No response'
-      persist([...next, { role: 'assistant', content: reply, ts: Date.now() }])
->>>>>>> 849e92743cd41de338fe36e16a6c3fcb4dbee76e
     } catch (err) {
       setError(getErrorMessage(err, 'Failed to get AI response'))
     } finally {
@@ -148,11 +135,7 @@ export function AIChat() {
       <header className="chat-header">
         <div>
           <h1 className="page-title">Chat with {PERSONALITY_NAME}</h1>
-<<<<<<< HEAD
-          <p className="page-subtitle">POST /openai/chat</p>
-=======
           <p className="page-subtitle">POST /chat/generate</p>
->>>>>>> 849e92743cd41de338fe36e16a6c3fcb4dbee76e
         </div>
 
         <div className="flex gap-2">
