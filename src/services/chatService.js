@@ -1,3 +1,5 @@
+import { USER_KEY } from '../api/axios'
+
 const SESSIONS_KEY = 'dps_chat_sessions'
 const ACTIVE_KEY = 'dps_active_chat'
 const CURRENT_SESSION_KEY = 'dps_current_session_id'
@@ -9,6 +11,21 @@ function emit(eventName) {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(eventName))
   }
+}
+
+function getStorageSuffix() {
+  try {
+    const raw = localStorage.getItem(USER_KEY)
+    const user = raw ? JSON.parse(raw) : null
+    const identity = user?.id || user?._id || user?.email || user?.username
+    return identity ? encodeURIComponent(String(identity).toLowerCase()) : 'guest'
+  } catch {
+    return 'guest'
+  }
+}
+
+function storageKey(baseKey) {
+  return `${baseKey}:${getStorageSuffix()}`
 }
 
 function dedupeSessions(sessions) {
@@ -25,7 +42,7 @@ function dedupeSessions(sessions) {
 
 export function getSessions() {
   try {
-    const raw = localStorage.getItem(SESSIONS_KEY)
+    const raw = localStorage.getItem(storageKey(SESSIONS_KEY))
     const sessions = raw ? JSON.parse(raw) : []
     return dedupeSessions(sessions)
   } catch {
@@ -34,17 +51,18 @@ export function getSessions() {
 }
 
 export function getCurrentSessionId() {
-  let id = localStorage.getItem(CURRENT_SESSION_KEY)
+  const key = storageKey(CURRENT_SESSION_KEY)
+  let id = localStorage.getItem(key)
   if (!id) {
     id = `session-${Date.now()}`
-    localStorage.setItem(CURRENT_SESSION_KEY, id)
+    localStorage.setItem(key, id)
   }
   return id
 }
 
 export function getActiveMessages() {
   try {
-    const raw = localStorage.getItem(ACTIVE_KEY)
+    const raw = localStorage.getItem(storageKey(ACTIVE_KEY))
     return raw ? JSON.parse(raw) : []
   } catch {
     return []
@@ -52,7 +70,7 @@ export function getActiveMessages() {
 }
 
 export function saveActiveMessages(messages) {
-  localStorage.setItem(ACTIVE_KEY, JSON.stringify(messages))
+  localStorage.setItem(storageKey(ACTIVE_KEY), JSON.stringify(messages))
   if (!messages.length) return
 
   const sessionId = getCurrentSessionId()
@@ -69,13 +87,13 @@ export function saveActiveMessages(messages) {
   }
 
   const others = sessions.filter((s) => s.id !== sessionId)
-  localStorage.setItem(SESSIONS_KEY, JSON.stringify([entry, ...others].slice(0, 20)))
+  localStorage.setItem(storageKey(SESSIONS_KEY), JSON.stringify([entry, ...others].slice(0, 20)))
   emit(CHAT_UPDATED_EVENT)
 }
 
 export function clearActiveChat() {
-  localStorage.removeItem(ACTIVE_KEY)
-  localStorage.removeItem(CURRENT_SESSION_KEY)
+  localStorage.removeItem(storageKey(ACTIVE_KEY))
+  localStorage.removeItem(storageKey(CURRENT_SESSION_KEY))
 }
 
 /** Save current conversation to history, then start a blank chat */
@@ -84,8 +102,8 @@ export function startNewChat() {
   if (messages.length) {
     saveActiveMessages(messages)
   }
-  localStorage.removeItem(ACTIVE_KEY)
-  localStorage.removeItem(CURRENT_SESSION_KEY)
+  localStorage.removeItem(storageKey(ACTIVE_KEY))
+  localStorage.removeItem(storageKey(CURRENT_SESSION_KEY))
   emit(NEW_CHAT_EVENT)
   emit(CHAT_UPDATED_EVENT)
 }
@@ -102,18 +120,19 @@ export function loadSession(sessionId) {
   const sessions = getSessions()
   const session = sessions.find((s) => s.id === sessionId)
   if (!session?.messages?.length) return
-  localStorage.setItem(ACTIVE_KEY, JSON.stringify(session.messages))
-  localStorage.setItem(CURRENT_SESSION_KEY, sessionId)
+  localStorage.setItem(storageKey(ACTIVE_KEY), JSON.stringify(session.messages))
+  localStorage.setItem(storageKey(CURRENT_SESSION_KEY), sessionId)
   emit(CHAT_UPDATED_EVENT)
 }
 
 export function deleteSession(sessionId) {
   const sessions = getSessions().filter((s) => s.id !== sessionId)
-  localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions))
-  const currentId = localStorage.getItem(CURRENT_SESSION_KEY)
+  localStorage.setItem(storageKey(SESSIONS_KEY), JSON.stringify(sessions))
+  const currentSessionKey = storageKey(CURRENT_SESSION_KEY)
+  const currentId = localStorage.getItem(currentSessionKey)
   if (currentId === sessionId) {
-    localStorage.removeItem(ACTIVE_KEY)
-    localStorage.removeItem(CURRENT_SESSION_KEY)
+    localStorage.removeItem(storageKey(ACTIVE_KEY))
+    localStorage.removeItem(currentSessionKey)
   }
   emit(CHAT_UPDATED_EVENT)
 }
