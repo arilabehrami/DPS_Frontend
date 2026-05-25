@@ -1,26 +1,62 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { StatCard } from '../components/Cards/StatCard'
 import { CredentialSaveForm } from '../components/CredentialSaveForm'
+import { employeesApi } from '../api/employeesApi'
 import { useAuth } from '../hooks/useAuth'
 import { useTranslation } from '../hooks/useTranslation'
 import {
   getConversationCount,
   getRecentChats,
 } from '../services/chatService'
-import { getSettings } from '../services/settingsService'
 import { PERSONALITY_NAME, ROLES } from '../utils/constants'
+
+function getList(data) {
+  const list = data?.items || data?.results || data?.personas || data?.data || data
+  return Array.isArray(list) ? list : []
+}
 
 export function Dashboard() {
   const { user, role, canManageUsers, isGuest } = useAuth()
   const { t } = useTranslation()
   const conversationCount = getConversationCount()
   const recentChats = getRecentChats(4)
-  const settings = getSettings()
-  const personalityLabel =
-    settings.personalityType.charAt(0).toUpperCase() +
-    settings.personalityType.slice(1)
+  const [personas, setPersonas] = useState([])
+  const [personasLoading, setPersonasLoading] = useState(true)
+  const personaNames = personas
+    .map((persona) => persona.name || `Persona ${persona.id}`)
+    .filter(Boolean)
+  const personaLabel = personaNames.length ? personaNames.join(', ') : PERSONALITY_NAME
   const firstName = user?.name?.split(' ')[0] || 'there'
   const roleLabel = t(`roles.${role}`)
+
+  useEffect(() => {
+    let mounted = true
+
+    const loadPersonas = async () => {
+      setPersonasLoading(true)
+      try {
+        const { data } = await employeesApi.getAll()
+        if (mounted) {
+          setPersonas(getList(data))
+        }
+      } catch {
+        if (mounted) {
+          setPersonas([])
+        }
+      } finally {
+        if (mounted) {
+          setPersonasLoading(false)
+        }
+      }
+    }
+
+    loadPersonas()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   return (
     <section className="page space-y-8">
@@ -30,7 +66,7 @@ export function Dashboard() {
         <h1 className="page-title">{t('dashboard.welcome', { name: firstName })}</h1>
         <p className="page-subtitle">
           {t('dashboard.subtitle', {
-            ai: PERSONALITY_NAME,
+            ai: personaLabel,
             roleLabel,
           })}
         </p>
@@ -42,24 +78,38 @@ export function Dashboard() {
         </p>
       )}
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <StatCard
-          title={t('dashboard.personality')}
-          value={PERSONALITY_NAME}
-          icon="🧠"
-          subtitle={personalityLabel}
-        />
+      <section className="grid gap-4 sm:grid-cols-2">
+        <article className="card p-5 transition hover:shadow-md">
+          <header className="flex items-start justify-between gap-4">
+            <section className="min-w-0">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                {t('dashboard.personality')}
+              </p>
+              {personasLoading ? (
+                <p className="mt-2 text-sm text-slate-400">Loading...</p>
+              ) : (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {(personaNames.length ? personaNames : [PERSONALITY_NAME]).map((name) => (
+                    <span
+                      key={name}
+                      className="rounded-lg border border-violet-100 bg-violet-50 px-3 py-1 text-sm font-semibold text-violet-700 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-300"
+                    >
+                      {name}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </section>
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 text-xl dark:bg-violet-950/50">
+              🧠
+            </span>
+          </header>
+        </article>
         <StatCard
           title={t('dashboard.conversations')}
           value={conversationCount}
           icon="💬"
           subtitle={t('dashboard.totalSessions')}
-        />
-        <StatCard
-          title={t('dashboard.memory')}
-          value={settings.memoryEnabled ? t('dashboard.on') : t('dashboard.off')}
-          icon="✨"
-          subtitle={t('dashboard.contextRetention')}
         />
       </section>
 

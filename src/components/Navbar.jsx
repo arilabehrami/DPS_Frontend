@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useTheme } from '../hooks/useTheme'
 import { useTranslation } from '../hooks/useTranslation'
-import { startNewChat } from '../services/chatService'
+import { getSelectedPersonaId, startNewChat } from '../services/chatService'
 import { LogoutButton } from './LogoutButton'
 import { RoleBadge } from './RoleBadge'
 import { PERSONALITY_NAME } from '../utils/constants'
@@ -15,7 +15,7 @@ export function Navbar({ onMenuClick }) {
   const location = useLocation()
 
   const handleNewChat = () => {
-    startNewChat()
+    startNewChat(getSelectedPersonaId())
     if (location.pathname !== '/ai-chat') {
       navigate('/ai-chat')
     }

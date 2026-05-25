@@ -1,8 +1,6 @@
 const SETTINGS_KEY = 'dps_settings'
 
 const defaults = {
-  personalityType: 'friendly',
-  memoryEnabled: true,
   language: 'en',
 }
 

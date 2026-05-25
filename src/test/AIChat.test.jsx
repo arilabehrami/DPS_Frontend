@@ -59,16 +59,60 @@ describe('AIChat', () => {
       </MemoryRouter>
     )
 
-    await user.type(screen.getByPlaceholderText(/message/i), 'Hello')
+    const input = await screen.findByPlaceholderText('Message Demo persona...')
+    await user.type(input, 'Hello')
     await user.click(screen.getByRole('button', { name: /send/i }))
 
     await waitFor(() => {
       expect(aiApi.chat).toHaveBeenCalledWith(
         'Hello',
-        expect.objectContaining({ personaId: 7, conversationId: 1 })
+        expect.objectContaining({ personaId: 7, language: 'en' })
       )
     })
 
     expect(await screen.findByText('Hello from assistant')).toBeInTheDocument()
+  })
+
+  it('shows only the selected persona history', async () => {
+    const user = userEvent.setup()
+    employeesApi.getAll.mockResolvedValue({
+      data: [
+        { id: 1, name: 'Aura' },
+        { id: 2, name: 'Lea' },
+      ],
+    })
+    aiApi.chat
+      .mockResolvedValueOnce({ data: { response: 'Aura reply' } })
+      .mockResolvedValueOnce({ data: { response: 'Lea reply' } })
+
+    render(
+      <MemoryRouter>
+        <ThemeProvider>
+          <LanguageProvider>
+            <AIChat />
+          </LanguageProvider>
+        </ThemeProvider>
+      </MemoryRouter>
+    )
+
+    const input = await screen.findByPlaceholderText('Message Aura...')
+    await user.type(input, 'hi aura')
+    await user.click(screen.getByRole('button', { name: /send/i }))
+    expect(await screen.findByText('Aura reply')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'hi aura' })).toBeInTheDocument()
+
+    await user.selectOptions(screen.getByLabelText('Choose persona'), '2')
+    await screen.findByPlaceholderText('Message Lea...')
+    expect(screen.queryByRole('button', { name: 'hi aura' })).not.toBeInTheDocument()
+
+    await user.type(screen.getByPlaceholderText('Message Lea...'), 'hi lea')
+    await user.click(screen.getByRole('button', { name: /send/i }))
+    expect(await screen.findByText('Lea reply')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'hi lea' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'hi aura' })).not.toBeInTheDocument()
+
+    await user.selectOptions(screen.getByLabelText('Choose persona'), '1')
+    expect(await screen.findByRole('button', { name: 'hi aura' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'hi lea' })).not.toBeInTheDocument()
   })
 })

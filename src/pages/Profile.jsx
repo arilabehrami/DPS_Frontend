@@ -3,17 +3,12 @@ import { useTheme } from '../hooks/useTheme'
 import { useTranslation } from '../hooks/useTranslation'
 import { LogoutButton } from '../components/LogoutButton'
 import { RoleBadge } from '../components/RoleBadge'
-import { getSettings } from '../services/settingsService'
-import { PERSONALITY_TYPES, PERSONALITY_NAME } from '../utils/constants'
+import { PERSONALITY_NAME } from '../utils/constants'
 
 export function Profile() {
   const { user, role } = useAuth()
   const { darkMode } = useTheme()
   const { t } = useTranslation()
-  const settings = getSettings()
-  const personalityLabel =
-    PERSONALITY_TYPES.find((p) => p.id === settings.personalityType)?.label ||
-    settings.personalityType
 
   return (
     <section className="page max-w-lg space-y-6">
@@ -40,7 +35,6 @@ export function Profile() {
             </div>
           </div>
           <ProfileField label={t('profile.aiCompanion')} value={PERSONALITY_NAME} />
-          <ProfileField label={t('profile.personalityStyle')} value={personalityLabel} />
           <ProfileField
             label={t('profile.theme')}
             value={darkMode ? t('profile.dark') : t('profile.light')}

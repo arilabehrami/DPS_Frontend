@@ -3,6 +3,7 @@ import { USER_KEY } from '../api/axios'
 const SESSIONS_KEY = 'dps_chat_sessions'
 const ACTIVE_KEY = 'dps_active_chat'
 const CURRENT_SESSION_KEY = 'dps_current_session_id'
+const SELECTED_PERSONA_KEY = 'dps_selected_persona_id'
 
 export const CHAT_UPDATED_EVENT = 'dps-chat-updated'
 export const NEW_CHAT_EVENT = 'dps-new-chat'
@@ -28,6 +29,24 @@ function storageKey(baseKey) {
   return `${baseKey}:${getStorageSuffix()}`
 }
 
+function personaStorageKey(baseKey, personaId) {
+  const base = storageKey(baseKey)
+  return personaId ? `${base}:persona:${encodeURIComponent(String(personaId))}` : base
+}
+
+export function setSelectedPersonaId(personaId) {
+  const key = storageKey(SELECTED_PERSONA_KEY)
+  if (personaId) {
+    localStorage.setItem(key, String(personaId))
+  } else {
+    localStorage.removeItem(key)
+  }
+}
+
+export function getSelectedPersonaId() {
+  return localStorage.getItem(storageKey(SELECTED_PERSONA_KEY)) || ''
+}
+
 function dedupeSessions(sessions) {
   const seen = new Map()
   for (const session of sessions) {
@@ -40,9 +59,9 @@ function dedupeSessions(sessions) {
   return [...seen.values()].sort((a, b) => b.updatedAt - a.updatedAt)
 }
 
-export function getSessions() {
+export function getSessions(personaId) {
   try {
-    const raw = localStorage.getItem(storageKey(SESSIONS_KEY))
+    const raw = localStorage.getItem(personaStorageKey(SESSIONS_KEY, personaId))
     const sessions = raw ? JSON.parse(raw) : []
     return dedupeSessions(sessions)
   } catch {
@@ -50,36 +69,37 @@ export function getSessions() {
   }
 }
 
-export function getCurrentSessionId() {
-  const key = storageKey(CURRENT_SESSION_KEY)
+export function getCurrentSessionId(personaId) {
+  const key = personaStorageKey(CURRENT_SESSION_KEY, personaId)
   let id = localStorage.getItem(key)
   if (!id) {
-    id = `session-${Date.now()}`
+    id = `session-${personaId || 'global'}-${Date.now()}`
     localStorage.setItem(key, id)
   }
   return id
 }
 
-export function getActiveMessages() {
+export function getActiveMessages(personaId) {
   try {
-    const raw = localStorage.getItem(storageKey(ACTIVE_KEY))
+    const raw = localStorage.getItem(personaStorageKey(ACTIVE_KEY, personaId))
     return raw ? JSON.parse(raw) : []
   } catch {
     return []
   }
 }
 
-export function saveActiveMessages(messages) {
-  localStorage.setItem(storageKey(ACTIVE_KEY), JSON.stringify(messages))
+export function saveActiveMessages(messages, personaId) {
+  localStorage.setItem(personaStorageKey(ACTIVE_KEY, personaId), JSON.stringify(messages))
   if (!messages.length) return
 
-  const sessionId = getCurrentSessionId()
-  const sessions = getSessions()
+  const sessionId = getCurrentSessionId(personaId)
+  const sessions = getSessions(personaId)
   const preview =
     messages.find((m) => m.role === 'user')?.content?.slice(0, 60) || 'New chat'
 
   const entry = {
     id: sessionId,
+    personaId: personaId || null,
     preview,
     messageCount: messages.length,
     messages,
@@ -87,51 +107,51 @@ export function saveActiveMessages(messages) {
   }
 
   const others = sessions.filter((s) => s.id !== sessionId)
-  localStorage.setItem(storageKey(SESSIONS_KEY), JSON.stringify([entry, ...others].slice(0, 20)))
+  localStorage.setItem(personaStorageKey(SESSIONS_KEY, personaId), JSON.stringify([entry, ...others].slice(0, 20)))
   emit(CHAT_UPDATED_EVENT)
 }
 
-export function clearActiveChat() {
-  localStorage.removeItem(storageKey(ACTIVE_KEY))
-  localStorage.removeItem(storageKey(CURRENT_SESSION_KEY))
+export function clearActiveChat(personaId) {
+  localStorage.removeItem(personaStorageKey(ACTIVE_KEY, personaId))
+  localStorage.removeItem(personaStorageKey(CURRENT_SESSION_KEY, personaId))
 }
 
 /** Save current conversation to history, then start a blank chat */
-export function startNewChat() {
-  const messages = getActiveMessages()
+export function startNewChat(personaId) {
+  const messages = getActiveMessages(personaId)
   if (messages.length) {
-    saveActiveMessages(messages)
+    saveActiveMessages(messages, personaId)
   }
-  localStorage.removeItem(storageKey(ACTIVE_KEY))
-  localStorage.removeItem(storageKey(CURRENT_SESSION_KEY))
+  localStorage.removeItem(personaStorageKey(ACTIVE_KEY, personaId))
+  localStorage.removeItem(personaStorageKey(CURRENT_SESSION_KEY, personaId))
   emit(NEW_CHAT_EVENT)
   emit(CHAT_UPDATED_EVENT)
 }
 
-export function getConversationCount() {
-  return getSessions().length
+export function getConversationCount(personaId) {
+  return getSessions(personaId).length
 }
 
-export function getRecentChats(limit = 5) {
-  return getSessions().slice(0, limit)
+export function getRecentChats(limit = 5, personaId) {
+  return getSessions(personaId).slice(0, limit)
 }
 
-export function loadSession(sessionId) {
-  const sessions = getSessions()
+export function loadSession(sessionId, personaId) {
+  const sessions = getSessions(personaId)
   const session = sessions.find((s) => s.id === sessionId)
   if (!session?.messages?.length) return
-  localStorage.setItem(storageKey(ACTIVE_KEY), JSON.stringify(session.messages))
-  localStorage.setItem(storageKey(CURRENT_SESSION_KEY), sessionId)
+  localStorage.setItem(personaStorageKey(ACTIVE_KEY, personaId), JSON.stringify(session.messages))
+  localStorage.setItem(personaStorageKey(CURRENT_SESSION_KEY, personaId), sessionId)
   emit(CHAT_UPDATED_EVENT)
 }
 
-export function deleteSession(sessionId) {
-  const sessions = getSessions().filter((s) => s.id !== sessionId)
-  localStorage.setItem(storageKey(SESSIONS_KEY), JSON.stringify(sessions))
-  const currentSessionKey = storageKey(CURRENT_SESSION_KEY)
+export function deleteSession(sessionId, personaId) {
+  const sessions = getSessions(personaId).filter((s) => s.id !== sessionId)
+  localStorage.setItem(personaStorageKey(SESSIONS_KEY, personaId), JSON.stringify(sessions))
+  const currentSessionKey = personaStorageKey(CURRENT_SESSION_KEY, personaId)
   const currentId = localStorage.getItem(currentSessionKey)
   if (currentId === sessionId) {
-    localStorage.removeItem(storageKey(ACTIVE_KEY))
+    localStorage.removeItem(personaStorageKey(ACTIVE_KEY, personaId))
     localStorage.removeItem(currentSessionKey)
   }
   emit(CHAT_UPDATED_EVENT)
