@@ -41,6 +41,14 @@ export function AuthProvider({ children }) {
   const role = useMemo(() => normalizeRole(user), [user])
 
   const applySession = useCallback((jwt, userData) => {
+    const previousUser = readStoredUser()
+    const previousIdentity = previousUser?.email || previousUser?.id || previousUser?.username
+    const nextIdentity = userData?.email || userData?.id || userData?.username
+
+    if (previousIdentity && nextIdentity && previousIdentity !== nextIdentity) {
+      localStorage.removeItem('dps_tenant_id')
+    }
+
     localStorage.setItem(TOKEN_KEY, jwt)
     if (userData) {
       localStorage.setItem(USER_KEY, JSON.stringify(userData))

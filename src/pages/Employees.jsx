@@ -27,6 +27,8 @@ export function Employees() {
   const navigate = useNavigate()
   const { canEdit, isGuest, user } = useAuth()
   const { t } = useTranslation()
+  const workspaceId = user?.workspace_id || user?.workspace?.id || 1
+  const userId = user?.id || user?.user_id || 1
 
   const columns = [
     { key: 'name', label: t('employees.persona') },
@@ -46,15 +48,19 @@ export function Employees() {
         page_size: PAGE_SIZE,
       })
       const list = data.items || data.results || data.personas || data.data || data
-      setEmployees(Array.isArray(list) ? list : [])
-      setTotal(data.total || data.count || list?.length || 0)
+      const allPersonas = Array.isArray(list) ? list : []
+      const ownPersonas = allPersonas.filter((persona) => {
+        return String(persona.user_id) === String(userId)
+      })
+      setEmployees(ownPersonas)
+      setTotal(ownPersonas.length)
     } catch (err) {
       setError(getErrorMessage(err, t('employees.loadError')))
       setEmployees([])
     } finally {
       setLoading(false)
     }
-  }, [debouncedSearch, page, t])
+  }, [debouncedSearch, page, t, userId])
 
   useEffect(() => {
     fetchEmployees()
@@ -65,8 +71,6 @@ export function Employees() {
   }, [debouncedSearch])
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
-  const workspaceId = user?.workspace_id || user?.workspace?.id || 1
-  const userId = user?.id || user?.user_id || 1
 
   const handleCreate = async (e) => {
     e.preventDefault()

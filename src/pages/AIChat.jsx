@@ -19,7 +19,7 @@ function getList(data) {
   return Array.isArray(list) ? list : []
 }
 
-function TypingIndicator() {
+function TypingIndicator({ name }) {
   return (
     <article className="chat-typing" aria-live="polite">
       <span className="chat-typing-dots">
@@ -27,20 +27,25 @@ function TypingIndicator() {
         <span />
         <span />
       </span>
-      {PERSONALITY_NAME} is typing...
+      {name} is typing...
     </article>
   )
 }
 
 export function AIChat() {
   const [messages, setMessages] = useState([])
+  const [personas, setPersonas] = useState([])
+  const [selectedPersonaId, setSelectedPersonaId] = useState('')
+  const [conversationIds, setConversationIds] = useState({})
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [personasLoading, setPersonasLoading] = useState(true)
   const [error, setError] = useState('')
   const [historyOpen, setHistoryOpen] = useState(true)
   const [sessions, setSessions] = useState(getSessions)
   const endRef = useRef(null)
   const settings = getSettings()
+  const selectedPersona = personas.find((persona) => String(persona.id) === String(selectedPersonaId))
 
   const refreshFromStorage = () => {
     setMessages(getActiveMessages())
@@ -68,6 +73,24 @@ export function AIChat() {
   }, [])
 
   useEffect(() => {
+    const loadPersonas = async () => {
+      setPersonasLoading(true)
+      try {
+        const { data } = await employeesApi.getAll()
+        const list = getList(data)
+        setPersonas(list)
+        setSelectedPersonaId((current) => current || String(list[0]?.id || ''))
+      } catch (err) {
+        setError(getErrorMessage(err, 'Failed to load personas'))
+      } finally {
+        setPersonasLoading(false)
+      }
+    }
+
+    loadPersonas()
+  }, [])
+
+  useEffect(() => {
     endRef.current?.scrollIntoView?.({ behavior: 'smooth' })
   }, [messages, loading])
 
@@ -80,7 +103,7 @@ export function AIChat() {
   const handleSend = async (e) => {
     e.preventDefault()
 
-    if (!input.trim() || loading) return
+    if (!input.trim() || loading || !selectedPersonaId) return
 
     const userMsg = {
       role: 'user',
@@ -96,18 +119,24 @@ export function AIChat() {
     setLoading(true)
 
     try {
-      const personasResponse = await employeesApi.getAll()
-      const persona = getList(personasResponse.data)[0]
+      const persona = selectedPersona
 
       if (!persona?.id) {
-        throw new Error('No persona found. Create at least one persona in backend first.')
+        throw new Error('Choose a persona before sending a message.')
       }
 
       const { data } = await aiApi.chat(userMsg.content, {
         personaId: persona.id,
-        conversationId: 1,
+        conversationId: conversationIds[persona.id],
         model: settings.model,
       })
+
+      if (data.conversation_id) {
+        setConversationIds((current) => ({
+          ...current,
+          [persona.id]: data.conversation_id,
+        }))
+      }
 
       const reply =
         data.response_text ||
@@ -147,11 +176,28 @@ export function AIChat() {
     <section className="chat-page">
       <header className="chat-header">
         <div>
-          <h1 className="page-title">Chat with {PERSONALITY_NAME}</h1>
+          <h1 className="page-title">Chat with {selectedPersona?.name || PERSONALITY_NAME}</h1>
           <p className="page-subtitle">POST /chat/generate</p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            className="input-field w-48 py-2 text-xs"
+            value={selectedPersonaId}
+            onChange={(e) => {
+              setSelectedPersonaId(e.target.value)
+              handleClear()
+            }}
+            disabled={personasLoading || loading}
+            aria-label="Choose persona"
+          >
+            {!personas.length && <option value="">No personas</option>}
+            {personas.map((persona) => (
+              <option key={persona.id} value={persona.id}>
+                {persona.name || `Persona ${persona.id}`}
+              </option>
+            ))}
+          </select>
           <button
             type="button"
             onClick={() => setHistoryOpen((v) => !v)}
@@ -206,7 +252,7 @@ export function AIChat() {
                 <span className="text-4xl">🧠</span>
 
                 <p className="mt-4 text-lg font-medium">
-                  Start a conversation with {PERSONALITY_NAME}
+                  Start a conversation with {selectedPersona?.name || PERSONALITY_NAME}
                 </p>
 
                 <p className="mt-1 max-w-sm text-sm text-slate-500">
@@ -238,7 +284,7 @@ export function AIChat() {
               </article>
             ))}
 
-            {loading && <TypingIndicator />}
+            {loading && <TypingIndicator name={selectedPersona?.name || PERSONALITY_NAME} />}
 
             {error && (
               <p className="alert alert--error" role="alert">
@@ -254,14 +300,14 @@ export function AIChat() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={`Message ${PERSONALITY_NAME}...`}
-              disabled={loading}
+              placeholder={`Message ${selectedPersona?.name || PERSONALITY_NAME}...`}
+              disabled={loading || personasLoading || !selectedPersonaId}
               className="chat-input"
             />
 
             <button
               type="submit"
-              disabled={loading || !input.trim()}
+              disabled={loading || personasLoading || !selectedPersonaId || !input.trim()}
               className="btn-primary"
             >
               Send

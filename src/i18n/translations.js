@@ -18,6 +18,7 @@ export const translations = {
     },
     nav: {
       dashboard: 'Dashboard',
+      clients: 'Clients',
       personas: 'Persona registry',
       search: 'Search',
       aiChat: 'AI Chat',
