@@ -9,10 +9,10 @@ import { Employees } from '../pages/Employees'
 import { EmployeeDetails } from '../pages/EmployeeDetails'
 import { AIChat } from '../pages/AIChat'
 import { ChatHistory } from '../pages/ChatHistory'
-import { Search } from '../pages/Search'
 import { Settings } from '../pages/Settings'
 import { Profile } from '../pages/Profile'
 import { Notifications } from '../pages/Notifications'
+import { Clients } from '../pages/Clients'
 
 export function AppRoutes() {
   return (
@@ -34,9 +34,16 @@ export function AppRoutes() {
           <Route path="/employees/:id" element={<EmployeeDetails />} />
           <Route path="/ai-chat" element={<AIChat />} />
           <Route path="/history" element={<ChatHistory />} />
-          <Route path="/search" element={<Search />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/profile" element={<Profile />} />
+          <Route
+            path="/clients"
+            element={
+              <ProtectedRoute roles={[ROLES.ADMIN]}>
+                <Clients />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/settings"
             element={

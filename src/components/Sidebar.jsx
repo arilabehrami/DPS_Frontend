@@ -9,9 +9,9 @@ const linkClass = ({ isActive }) =>
   `sidebar-link ${isActive ? 'sidebar-link--active' : ''}`
 
 const NAV_ITEMS = [
+  { to: '/clients', key: 'nav.clients', icon: '◎', roles: [ROLES.ADMIN] },
   { to: '/dashboard', key: 'nav.dashboard', icon: '◉' },
   { to: '/employees', key: 'nav.personas', icon: '👤', roles: [ROLES.ADMIN, ROLES.EMPLOYEE, ROLES.GUEST] },
-  { to: '/search', key: 'nav.search', icon: '🔍' },
   { to: '/ai-chat', key: 'nav.aiChat', icon: '✦' },
   { to: '/history', key: 'nav.history', icon: '☰' },
   { to: '/notifications', key: 'nav.notifications', icon: '🔔' },

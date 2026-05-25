@@ -107,8 +107,8 @@ export function Dashboard() {
             <Link to="/employees" className="btn-primary">
               {t('dashboard.personaRegistry')}
             </Link>
-            <Link to="/search" className="btn-secondary">
-              {t('dashboard.advancedSearch')}
+            <Link to="/clients" className="btn-secondary">
+              Clients
             </Link>
             <Link to="/settings" className="btn-secondary">
               {t('nav.settings')}
@@ -127,9 +127,6 @@ export function Dashboard() {
           </Link>
           <Link to="/employees" className="btn-secondary">
             {t('dashboard.personaRegistry')}
-          </Link>
-          <Link to="/search" className="btn-secondary">
-            {t('nav.search')}
           </Link>
           <Link to="/history" className="btn-secondary">
             {t('dashboard.chatHistory')}
