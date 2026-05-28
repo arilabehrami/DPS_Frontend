@@ -10,9 +10,11 @@ import {
   getSessions,
   loadSession,
   saveActiveMessages,
+  setSelectedPersonaId as saveSelectedPersonaId,
 } from '../services/chatService'
 import { getSettings } from '../services/settingsService'
 import { PERSONALITY_NAME } from '../utils/constants'
+import { useTranslation } from '../hooks/useTranslation'
 
 function getList(data) {
   const list = data?.items || data?.results || data?.personas || data?.data || data
@@ -45,20 +47,22 @@ export function AIChat() {
   const [sessions, setSessions] = useState(getSessions)
   const endRef = useRef(null)
   const settings = getSettings()
+  const { language } = useTranslation()
   const selectedPersona = personas.find((persona) => String(persona.id) === String(selectedPersonaId))
 
   const refreshFromStorage = () => {
-    setMessages(getActiveMessages())
-    setSessions(getSessions())
+    setMessages(getActiveMessages(selectedPersonaId))
+    setSessions(getSessions(selectedPersonaId))
   }
 
   useEffect(() => {
-    refreshFromStorage()
-
-    const onUpdate = () => refreshFromStorage()
+    const onUpdate = () => {
+      setMessages(getActiveMessages(selectedPersonaId))
+      setSessions(getSessions(selectedPersonaId))
+    }
     const onNewChat = () => {
       setMessages([])
-      setSessions(getSessions())
+      setSessions(getSessions(selectedPersonaId))
       setError('')
       setInput('')
     }
@@ -70,7 +74,15 @@ export function AIChat() {
       window.removeEventListener(CHAT_UPDATED_EVENT, onUpdate)
       window.removeEventListener(NEW_CHAT_EVENT, onNewChat)
     }
-  }, [])
+  }, [selectedPersonaId])
+
+  useEffect(() => {
+    saveSelectedPersonaId(selectedPersonaId)
+    setMessages(getActiveMessages(selectedPersonaId))
+    setSessions(getSessions(selectedPersonaId))
+    setError('')
+    setInput('')
+  }, [selectedPersonaId])
 
   useEffect(() => {
     const loadPersonas = async () => {
@@ -96,8 +108,8 @@ export function AIChat() {
 
   const persist = (list) => {
     setMessages(list)
-    saveActiveMessages(list)
-    setSessions(getSessions())
+    saveActiveMessages(list, selectedPersonaId)
+    setSessions(getSessions(selectedPersonaId))
   }
 
   const handleSend = async (e) => {
@@ -129,6 +141,7 @@ export function AIChat() {
         personaId: persona.id,
         conversationId: conversationIds[persona.id],
         model: settings.model,
+        language,
       })
 
       if (data.conversation_id) {
@@ -161,14 +174,14 @@ export function AIChat() {
   }
 
   const handleClear = () => {
-    clearActiveChat()
+    clearActiveChat(selectedPersonaId)
     setMessages([])
-    setSessions(getSessions())
+    setSessions(getSessions(selectedPersonaId))
     setError('')
   }
 
   const handleOpenSession = (sessionId) => {
-    loadSession(sessionId)
+    loadSession(sessionId, selectedPersonaId)
     refreshFromStorage()
   }
 
@@ -186,7 +199,6 @@ export function AIChat() {
             value={selectedPersonaId}
             onChange={(e) => {
               setSelectedPersonaId(e.target.value)
-              handleClear()
             }}
             disabled={personasLoading || loading}
             aria-label="Choose persona"
@@ -256,7 +268,7 @@ export function AIChat() {
                 </p>
 
                 <p className="mt-1 max-w-sm text-sm text-slate-500">
-                  Ask anything — your digital personality remembers context when memory is enabled.
+                  Ask anything and keep each persona conversation separate.
                 </p>
               </div>
             )}

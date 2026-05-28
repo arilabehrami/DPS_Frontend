@@ -7,5 +7,6 @@ export const aiApi = {
       ...(options.conversationId ? { conversation_id: options.conversationId } : {}),
       message,
       ...(options.model ? { model: options.model } : {}),
+      ...(options.language ? { response_language: options.language } : {}),
     }),
 }

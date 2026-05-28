@@ -8,13 +8,6 @@ export const ROLES = {
   GUEST: 'guest',
 }
 
-export const PERSONALITY_TYPES = [
-  { id: 'friendly', label: 'Friendly & Warm' },
-  { id: 'professional', label: 'Professional' },
-  { id: 'creative', label: 'Creative & Playful' },
-  { id: 'analytical', label: 'Analytical' },
-]
-
 export const LANGUAGES = [
   { id: 'en', label: 'English' },
   { id: 'sq', label: 'Albanian' },

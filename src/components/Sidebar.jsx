@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useTranslation } from '../hooks/useTranslation'
 import { RoleBadge } from './RoleBadge'
-import { APP_SHORT, PERSONALITY_NAME, ROLES } from '../utils/constants'
+import { APP_SHORT, ROLES } from '../utils/constants'
 import { filterNavByRole } from '../utils/permissions'
 
 const linkClass = ({ isActive }) =>
@@ -10,13 +10,13 @@ const linkClass = ({ isActive }) =>
 
 const NAV_ITEMS = [
   { to: '/clients', key: 'nav.clients', icon: '◎', roles: [ROLES.ADMIN] },
-  { to: '/dashboard', key: 'nav.dashboard', icon: '◉' },
+  { to: '/dashboard', key: 'nav.dashboard', icon: '◎' },
   { to: '/employees', key: 'nav.personas', icon: '👤', roles: [ROLES.ADMIN, ROLES.EMPLOYEE, ROLES.GUEST] },
   { to: '/ai-chat', key: 'nav.aiChat', icon: '✦' },
   { to: '/history', key: 'nav.history', icon: '☰' },
   { to: '/notifications', key: 'nav.notifications', icon: '🔔' },
   { to: '/profile', key: 'nav.profile', icon: '◎' },
-  { to: '/settings', key: 'nav.settings', icon: '⚙', roles: [ROLES.ADMIN, ROLES.EMPLOYEE] },
+  { to: '/settings', key: 'nav.settings', icon: '⚙️', roles: [ROLES.ADMIN, ROLES.EMPLOYEE] },
 ]
 
 export function Sidebar({ open, onClose }) {
@@ -44,9 +44,6 @@ export function Sidebar({ open, onClose }) {
           <p className="sidebar-user-name">{user?.name || 'User'}</p>
           <p className="sidebar-user-email">{user?.email}</p>
           <RoleBadge role={role} />
-          <p className="mt-2 text-xs text-violet-500">
-            {PERSONALITY_NAME} · {t('profile.aiCompanion')}
-          </p>
         </section>
 
         <nav className="sidebar-nav">
