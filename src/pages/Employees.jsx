@@ -11,6 +11,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useTranslation } from '../hooks/useTranslation'
 import { useDebounce } from '../hooks/useDebounce'
 import { PAGE_SIZE, PERSONALITY_NAME } from '../utils/constants'
+import { getCurrentUserId, getVisiblePersonas } from '../utils/personas'
 
 export function Employees() {
   const [employees, setEmployees] = useState([])
@@ -28,14 +29,11 @@ export function Employees() {
   const { canEdit, isGuest, user } = useAuth()
   const { t } = useTranslation()
   const workspaceId = user?.workspace_id || user?.workspace?.id || 1
-  const userId = user?.id || user?.user_id || 1
+  const userId = getCurrentUserId(user) || 1
 
   const columns = [
     { key: 'name', label: t('employees.persona') },
     { key: 'description', label: 'Description' },
-    { key: 'workspace_id', label: 'Workspace ID' },
-    { key: 'user_id', label: 'User ID' },
-    { key: 'id', label: 'Persona ID' },
   ]
 
   const fetchEmployees = useCallback(async () => {
@@ -47,11 +45,7 @@ export function Employees() {
         page,
         page_size: PAGE_SIZE,
       })
-      const list = data.items || data.results || data.personas || data.data || data
-      const allPersonas = Array.isArray(list) ? list : []
-      const ownPersonas = allPersonas.filter((persona) => {
-        return String(persona.user_id) === String(userId)
-      })
+      const ownPersonas = getVisiblePersonas(data, user)
       setEmployees(ownPersonas)
       setTotal(ownPersonas.length)
     } catch (err) {
@@ -105,7 +99,7 @@ export function Employees() {
         <div>
           <h1 className="page-title">{t('employees.title')}</h1>
           <p className="page-subtitle">
-            {t('employees.subtitle')}
+            Manage persona profiles
             {isGuest && ` · ${t('common.readOnly')}`}
           </p>
         </div>
@@ -191,9 +185,6 @@ export function Employees() {
               disabled={creating}
             />
           </label>
-          <p className="text-xs text-slate-500">
-            This will use workspace_id {workspaceId} and user_id {userId}.
-          </p>
         </form>
       </Modal>
     </section>

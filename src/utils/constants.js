@@ -5,6 +5,7 @@ export const PERSONALITY_NAME = 'Aura'
 export const ROLES = {
   ADMIN: 'admin',
   EMPLOYEE: 'employee',
+  CLIENT: 'client',
   GUEST: 'guest',
 }
 

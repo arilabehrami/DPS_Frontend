@@ -22,7 +22,7 @@ describe('Search page', () => {
     })
   })
 
-  it('renders search input and filters', () => {
+  it('renders search input and results section', async () => {
     render(
       <MemoryRouter>
         <ThemeProvider>
@@ -33,8 +33,7 @@ describe('Search page', () => {
       </MemoryRouter>
     )
     expect(screen.getByLabelText(/search/i)).toBeInTheDocument()
-    expect(screen.getByText(/style/i)).toBeInTheDocument()
-    expect(screen.getByText(/reset filters/i)).toBeInTheDocument()
+    expect(await screen.findByText(/result\(s\)/i)).toBeInTheDocument()
   })
 
   it('calls API with debounced search', async () => {

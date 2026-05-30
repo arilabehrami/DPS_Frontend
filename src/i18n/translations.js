@@ -24,6 +24,7 @@ export const translations = {
       aiChat: 'AI Chat',
       history: 'Chat History',
       notifications: 'Notifications',
+      messages: 'Messages',
       profile: 'Profile',
       settings: 'Settings',
       newChat: 'New chat',

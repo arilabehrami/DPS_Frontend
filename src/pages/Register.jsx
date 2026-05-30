@@ -6,13 +6,17 @@ import { AuthBackground } from '../components/AuthBackground'
 import { APP_SHORT, PERSONALITY_NAME } from '../utils/constants'
 import { clearPendingCredentials } from '../utils/credentials'
 
+const OTP_PENDING_KEY = 'dps_pending_registration'
+
 export function Register() {
   const [name, setName] = useState('')
+  const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
-  const { register, loading, isAuthenticated, initializing } = useAuth()
+  const [info, setInfo] = useState('')
+  const { requestRegisterOtp, loading, isAuthenticated, initializing } = useAuth()
   const { t } = useTranslation()
   const navigate = useNavigate()
 
@@ -25,9 +29,22 @@ export function Register() {
   }
   if (isAuthenticated) return <Navigate to="/dashboard" replace />
 
+  const parseWaitSeconds = (text) => {
+    const match = String(text || '').match(/(\d+)/)
+    return match ? Number(match[1]) : 60
+  }
+
+  const mapRequestOtpError = (status, message) => {
+    const normalized = String(message || '').toLowerCase()
+    if (status === 400 && normalized.includes('already registered')) return 'Ky email ekziston.'
+    if (status === 429) return `Prit pak para se të kërkosh kod të ri (${parseWaitSeconds(message)}s).`
+    return message || 'Something went wrong'
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setInfo('')
     clearPendingCredentials()
 
     if (!name.trim() || !email.trim() || !password.trim()) {
@@ -43,14 +60,22 @@ export function Register() {
       return
     }
 
-    const result = await register({
-      username: name.trim(),
+    const payload = {
+      full_name: name.trim(),
+      username: username.trim() || name.trim(),
       email: email.trim(),
       password,
-      workspace_id: 1,
-    })
-    if (result.success) navigate('/dashboard', { replace: true })
-    else setError(result.error)
+    }
+
+    const result = await requestRegisterOtp(payload)
+    if (!result.success) {
+      setError(mapRequestOtpError(result.status, result.error))
+      return
+    }
+
+    sessionStorage.setItem(OTP_PENDING_KEY, JSON.stringify(payload))
+    setInfo('Check your email (and spam folder).')
+    navigate('/verify-account', { replace: true, state: { email: payload.email } })
   }
 
   return (
@@ -82,6 +107,7 @@ export function Register() {
                 {error}
               </p>
             )}
+            {info && <p className="alert alert--info">{info}</p>}
 
             <label className="form-label">
               {t('auth.fullName')}
@@ -93,6 +119,18 @@ export function Register() {
                 className="input-field auth-input"
                 autoComplete="off"
                 required
+              />
+            </label>
+
+            <label className="form-label">
+              Username (optional)
+              <input
+                type="text"
+                name="dps-reg-username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="input-field auth-input"
+                autoComplete="off"
               />
             </label>
 
@@ -139,11 +177,13 @@ export function Register() {
             </label>
 
             <button type="submit" disabled={loading} className="btn-primary auth-submit w-full">
-              {loading ? t('auth.creatingAccount') : t('auth.createAccount')}
+              {loading ? 'Sending code...' : t('auth.createAccount')}
             </button>
-
             <p className="auth-footer-link">
               {t('auth.hasAccount')} <Link to="/login">{t('auth.signIn')}</Link>
+            </p>
+            <p className="auth-footer-link">
+              Invited by admin? <Link to="/verify-account">Verify account</Link>
             </p>
           </form>
         </div>

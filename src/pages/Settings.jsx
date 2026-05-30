@@ -55,7 +55,7 @@ export function Settings() {
           </h2>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{user?.email}</p>
           <p className="mt-2 flex items-center gap-2 text-sm text-slate-500">
-            {t('common.role')}: <RoleBadge role={role} />
+            {t('common.role')}: <RoleBadge role={role} roleId={user?.role_id} />
           </p>
         </section>
       </article>

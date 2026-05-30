@@ -5,7 +5,6 @@ import { getErrorMessage } from '../api/axios'
 import { Loader } from '../components/Loader'
 import { Modal } from '../components/Modal'
 import { useAuth } from '../hooks/useAuth'
-import { PERSONALITY_NAME } from '../utils/constants'
 
 export function EmployeeDetails() {
   const { id } = useParams()
@@ -102,19 +101,13 @@ export function EmployeeDetails() {
     <section className="page max-w-2xl space-y-6">
       <header>
         <Link to="/employees" className="text-sm text-violet-500 hover:text-violet-400">
-          ← Back to persona registry
+          Back to persona registry
         </Link>
         <h1 className="page-title mt-2">{persona.name}</h1>
-        <p className="page-subtitle">
-          Persona profile · used by {PERSONALITY_NAME} simulations
-        </p>
       </header>
 
       <article className="card p-6 space-y-4">
         <DetailRow label="Description" value={persona.description} />
-        <DetailRow label="Workspace ID" value={persona.workspace_id} />
-        <DetailRow label="User ID" value={persona.user_id} />
-        <DetailRow label="Persona ID" value={persona.id} />
       </article>
 
       {canEdit && !isGuest && (
@@ -175,7 +168,7 @@ function DetailRow({ label, value }) {
   return (
     <div>
       <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="mt-1 text-slate-800 dark:text-slate-100">{value || '—'}</p>
+      <p className="mt-1 text-slate-800 dark:text-slate-100">{value || '-'}</p>
     </div>
   )
 }
