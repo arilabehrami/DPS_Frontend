@@ -3,12 +3,12 @@ import { useAuth } from '../hooks/useAuth'
 import { Loader } from './Loader'
 
 export function ProtectedRoute({ children, roles }) {
-  const { isAuthenticated, initializing, role } = useAuth()
+  const { isAuthenticated, initializing, role, token, user } = useAuth()
   const location = useLocation()
 
   if (initializing) return <Loader fullScreen label="Checking session..." />
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !token || !user) {
     return <Navigate to="/login" replace state={{ from: location }} />
   }
 

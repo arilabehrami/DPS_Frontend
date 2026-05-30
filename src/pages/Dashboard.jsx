@@ -10,11 +10,7 @@ import {
   getRecentChats,
 } from '../services/chatService'
 import { PERSONALITY_NAME, ROLES } from '../utils/constants'
-
-function getList(data) {
-  const list = data?.items || data?.results || data?.personas || data?.data || data
-  return Array.isArray(list) ? list : []
-}
+import { getVisiblePersonas } from '../utils/personas'
 
 export function Dashboard() {
   const { user, role, canManageUsers, isGuest } = useAuth()
@@ -38,7 +34,7 @@ export function Dashboard() {
       try {
         const { data } = await employeesApi.getAll()
         if (mounted) {
-          setPersonas(getList(data))
+          setPersonas(getVisiblePersonas(data, user))
         }
       } catch {
         if (mounted) {
@@ -56,7 +52,7 @@ export function Dashboard() {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [user])
 
   return (
     <section className="page space-y-8">

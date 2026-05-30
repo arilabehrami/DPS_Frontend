@@ -41,7 +41,7 @@ export function Navbar({ onMenuClick }) {
       </section>
 
       <section className="navbar-right">
-        <RoleBadge role={role} className="hidden sm:inline-flex" />
+        <RoleBadge role={role} roleId={user?.role_id} className="hidden sm:inline-flex" />
 
         <button
           type="button"

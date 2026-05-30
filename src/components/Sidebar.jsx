@@ -9,14 +9,14 @@ const linkClass = ({ isActive }) =>
   `sidebar-link ${isActive ? 'sidebar-link--active' : ''}`
 
 const NAV_ITEMS = [
-  { to: '/clients', key: 'nav.clients', icon: '◎', roles: [ROLES.ADMIN] },
+  { to: '/clients', key: 'nav.clients', icon: '◎', roles: [ROLES.ADMIN, ROLES.EMPLOYEE] },
   { to: '/dashboard', key: 'nav.dashboard', icon: '◎' },
-  { to: '/employees', key: 'nav.personas', icon: '👤', roles: [ROLES.ADMIN, ROLES.EMPLOYEE, ROLES.GUEST] },
+  { to: '/employees', key: 'nav.personas', icon: '👤', roles: [ROLES.ADMIN, ROLES.EMPLOYEE, ROLES.CLIENT, ROLES.GUEST] },
   { to: '/ai-chat', key: 'nav.aiChat', icon: '✦' },
   { to: '/history', key: 'nav.history', icon: '☰' },
-  { to: '/notifications', key: 'nav.notifications', icon: '🔔' },
+  { to: '/messages', key: 'nav.messages', icon: '@', roles: [ROLES.ADMIN, ROLES.EMPLOYEE, ROLES.CLIENT] },
   { to: '/profile', key: 'nav.profile', icon: '◎' },
-  { to: '/settings', key: 'nav.settings', icon: '⚙️', roles: [ROLES.ADMIN, ROLES.EMPLOYEE] },
+  { to: '/settings', key: 'nav.settings', icon: '⚙️', roles: [ROLES.ADMIN, ROLES.EMPLOYEE, ROLES.CLIENT] },
 ]
 
 export function Sidebar({ open, onClose }) {
@@ -43,7 +43,7 @@ export function Sidebar({ open, onClose }) {
         <section className="sidebar-user">
           <p className="sidebar-user-name">{user?.name || 'User'}</p>
           <p className="sidebar-user-email">{user?.email}</p>
-          <RoleBadge role={role} />
+          <RoleBadge role={role} roleId={user?.role_id} />
         </section>
 
         <nav className="sidebar-nav">
@@ -60,3 +60,9 @@ export function Sidebar({ open, onClose }) {
     </>
   )
 }
+
+
+
+
+
+

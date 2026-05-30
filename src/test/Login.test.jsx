@@ -7,6 +7,16 @@ import { AuthProvider } from '../context/AuthContext'
 import { ThemeProvider } from '../context/ThemeContext'
 import { LanguageProvider } from '../context/LanguageContext'
 
+const mockedNavigate = vi.fn()
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return {
+    ...actual,
+    useNavigate: () => mockedNavigate,
+  }
+})
+
 vi.mock('../api/authApi', () => ({
   authApi: {
     login: vi.fn(),
@@ -35,6 +45,7 @@ describe('Login', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorage.clear()
+    mockedNavigate.mockReset()
     authApi.getProfile.mockRejectedValue(new Error('no session'))
   })
 
@@ -70,5 +81,6 @@ describe('Login', () => {
     await waitFor(() => {
       expect(authApi.login).toHaveBeenCalledWith('test@example.com', 'password123')
     })
+    expect(mockedNavigate).toHaveBeenCalledWith('/dashboard', { replace: true })
   })
 })

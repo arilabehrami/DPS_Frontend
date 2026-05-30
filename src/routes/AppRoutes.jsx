@@ -4,6 +4,10 @@ import { AppLayout } from '../components/layout/AppLayout'
 import { ROLES } from '../utils/constants'
 import { Login } from '../pages/Login'
 import { Register } from '../pages/Register'
+import { VerifyAccount } from '../pages/VerifyAccount'
+import { ForgotPasswordRequest } from '../pages/ForgotPasswordRequest'
+import { ForgotPasswordVerify } from '../pages/ForgotPasswordVerify'
+import { ResetPassword } from '../pages/ResetPassword'
 import { Dashboard } from '../pages/Dashboard'
 import { Employees } from '../pages/Employees'
 import { EmployeeDetails } from '../pages/EmployeeDetails'
@@ -13,6 +17,7 @@ import { Settings } from '../pages/Settings'
 import { Profile } from '../pages/Profile'
 import { Notifications } from '../pages/Notifications'
 import { Clients } from '../pages/Clients'
+import { Messages } from '../pages/Messages'
 
 export function AppRoutes() {
   return (
@@ -20,6 +25,10 @@ export function AppRoutes() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/verify-account" element={<VerifyAccount />} />
+        <Route path="/forgot-password" element={<ForgotPasswordRequest />} />
+        <Route path="/forgot-password/verify" element={<ForgotPasswordVerify />} />
+        <Route path="/forgot-password/reset" element={<ResetPassword />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
 
         <Route
@@ -35,11 +44,12 @@ export function AppRoutes() {
           <Route path="/ai-chat" element={<AIChat />} />
           <Route path="/history" element={<ChatHistory />} />
           <Route path="/notifications" element={<Notifications />} />
+          <Route path="/messages" element={<Messages />} />
           <Route path="/profile" element={<Profile />} />
           <Route
             path="/clients"
             element={
-              <ProtectedRoute roles={[ROLES.ADMIN]}>
+              <ProtectedRoute roles={[ROLES.ADMIN, ROLES.EMPLOYEE]}>
                 <Clients />
               </ProtectedRoute>
             }
@@ -47,7 +57,7 @@ export function AppRoutes() {
           <Route
             path="/settings"
             element={
-              <ProtectedRoute roles={[ROLES.ADMIN, ROLES.EMPLOYEE]}>
+              <ProtectedRoute roles={[ROLES.ADMIN, ROLES.EMPLOYEE, ROLES.CLIENT]}>
                 <Settings />
               </ProtectedRoute>
             }

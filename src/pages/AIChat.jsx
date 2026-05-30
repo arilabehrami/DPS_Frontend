@@ -8,6 +8,7 @@ import {
   clearActiveChat,
   getActiveMessages,
   getSessions,
+  getSelectedPersonaId,
   loadSession,
   saveActiveMessages,
   setSelectedPersonaId as saveSelectedPersonaId,
@@ -15,11 +16,8 @@ import {
 import { getSettings } from '../services/settingsService'
 import { PERSONALITY_NAME } from '../utils/constants'
 import { useTranslation } from '../hooks/useTranslation'
-
-function getList(data) {
-  const list = data?.items || data?.results || data?.personas || data?.data || data
-  return Array.isArray(list) ? list : []
-}
+import { getVisiblePersonas } from '../utils/personas'
+import { useAuth } from '../hooks/useAuth'
 
 function TypingIndicator({ name }) {
   return (
@@ -37,17 +35,18 @@ function TypingIndicator({ name }) {
 export function AIChat() {
   const [messages, setMessages] = useState([])
   const [personas, setPersonas] = useState([])
-  const [selectedPersonaId, setSelectedPersonaId] = useState('')
+  const [selectedPersonaId, setSelectedPersonaId] = useState(getSelectedPersonaId)
   const [conversationIds, setConversationIds] = useState({})
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [personasLoading, setPersonasLoading] = useState(true)
   const [error, setError] = useState('')
   const [historyOpen, setHistoryOpen] = useState(true)
-  const [sessions, setSessions] = useState(getSessions)
+  const [sessions, setSessions] = useState(() => getSessions(getSelectedPersonaId()))
   const endRef = useRef(null)
   const settings = getSettings()
   const { language } = useTranslation()
+  const { user } = useAuth()
   const selectedPersona = personas.find((persona) => String(persona.id) === String(selectedPersonaId))
 
   const refreshFromStorage = () => {
@@ -89,9 +88,12 @@ export function AIChat() {
       setPersonasLoading(true)
       try {
         const { data } = await employeesApi.getAll()
-        const list = getList(data)
+        const list = getVisiblePersonas(data, user)
         setPersonas(list)
-        setSelectedPersonaId((current) => current || String(list[0]?.id || ''))
+        setSelectedPersonaId((current) => {
+          const hasCurrent = list.some((persona) => String(persona.id) === String(current))
+          return hasCurrent ? current : String(list[0]?.id || '')
+        })
       } catch (err) {
         setError(getErrorMessage(err, 'Failed to load personas'))
       } finally {
@@ -100,7 +102,7 @@ export function AIChat() {
     }
 
     loadPersonas()
-  }, [])
+  }, [user])
 
   useEffect(() => {
     endRef.current?.scrollIntoView?.({ behavior: 'smooth' })
@@ -190,7 +192,6 @@ export function AIChat() {
       <header className="chat-header">
         <div>
           <h1 className="page-title">Chat with {selectedPersona?.name || PERSONALITY_NAME}</h1>
-          <p className="page-subtitle">POST /chat/generate</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

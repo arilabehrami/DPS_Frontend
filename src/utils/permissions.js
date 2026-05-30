@@ -19,9 +19,11 @@ export function getRoleAccess(role) {
   const normalizedRole = role === 'user' ? ROLES.EMPLOYEE : role
   return {
     canViewRegistry: true,
-    canEditRegistry: normalizedRole === ROLES.ADMIN || normalizedRole === ROLES.EMPLOYEE,
+    canEditRegistry:
+      normalizedRole === ROLES.ADMIN || normalizedRole === ROLES.EMPLOYEE || normalizedRole === ROLES.CLIENT,
     canManageUsers: normalizedRole === ROLES.ADMIN,
-    canAccessSettings: normalizedRole === ROLES.ADMIN || normalizedRole === ROLES.EMPLOYEE,
+    canAccessSettings:
+      normalizedRole === ROLES.ADMIN || normalizedRole === ROLES.EMPLOYEE || normalizedRole === ROLES.CLIENT,
     isReadOnly: normalizedRole === ROLES.GUEST,
   }
 }
